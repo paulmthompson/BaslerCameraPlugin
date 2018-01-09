@@ -72,6 +72,10 @@ void BaslerCameraCanvas::setParameter(int a, int b, int c, float d)
 {
 }
 
+void BaslerCameraCanvas::paint(Graphics& g)
+{
+	g.fillAll(Colours::lightblue);
+}
 
 BaslerCameraEditor::BaslerCameraEditor(GenericProcessor* parentNode,bool useDefaultParameterEditors)
 	: VisualizerEditor(parentNode, useDefaultParameterEditors)

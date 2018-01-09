@@ -60,6 +60,7 @@ public:
 	BaslerCameraCanvas(GenericProcessor* n);
 	~BaslerCameraCanvas();
 
+	void paint(Graphics& g);
 	void update();
 	void resized();
 	void buttonClicked(Button* button);
