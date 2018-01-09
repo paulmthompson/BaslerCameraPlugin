@@ -77,6 +77,7 @@ BaslerCameraEditor::BaslerCameraEditor(GenericProcessor* parentNode,bool useDefa
 	: VisualizerEditor(parentNode, useDefaultParameterEditors)
 
 {
+	desiredWidth = 340;
 	canvas = nullptr;
 	tabText = "Camera";
 
