@@ -10,6 +10,8 @@ VPATH := $(SOURCE_DIRS)
 SRC := $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.cpp))
 OBJ := $(addprefix $(OBJDIR)/,$(notdir $(SRC:.cpp=.o)))
 
+CXXFLAGS += -I/opt/pylon5/include
+
 BLDCMD := $(CXX) -shared -o $(OUTDIR)/$(TARGET) $(OBJ) $(LDFLAGS) $(RESOURCES) $(TARGET_ARCH)
 
 VPATH = $(SRC_DIR)

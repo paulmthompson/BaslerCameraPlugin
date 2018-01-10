@@ -3,6 +3,11 @@
 #include <stdio.h>
 #include "../../Processors/SourceNode/SourceNode.h"
 
+#include <pylon/PylonIncludes.h>
+#ifdef PYLON_WIN_BUILD
+#    include <pylon/PylonGUI.h>
+#endif
+
 BaslerCameraViewer::BaslerCameraViewer(GenericProcessor* proc_, Viewport* p, BaslerCameraCanvas* c) : viewport(p), canvas(c)
 {
 	proc = (SourceNode*)proc_;
