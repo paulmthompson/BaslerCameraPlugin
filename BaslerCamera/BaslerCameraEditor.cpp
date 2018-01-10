@@ -38,6 +38,7 @@ BaslerCameraCanvas::~BaslerCameraCanvas()
 
 void BaslerCameraCanvas::update()
 {
+	repaint();
 }
 
 void BaslerCameraCanvas::resized()
@@ -50,6 +51,7 @@ void BaslerCameraCanvas::buttonClicked(Button* btn)
 
 void BaslerCameraCanvas::refresh()
 {
+	repaint();
 }
 
 void BaslerCameraCanvas::refreshState()
@@ -58,10 +60,12 @@ void BaslerCameraCanvas::refreshState()
 
 void BaslerCameraCanvas::beginAnimation()
 {
+	startCallbacks();
 }
 
 void BaslerCameraCanvas::endAnimation()
 {
+	stopCallbacks();
 }
 
 void BaslerCameraCanvas::setParameter(int x, float f)
@@ -74,7 +78,9 @@ void BaslerCameraCanvas::setParameter(int a, int b, int c, float d)
 
 void BaslerCameraCanvas::paint(Graphics& g)
 {
-	g.fillAll(Colours::lightblue);
+	Random& r(Random::getSystemRandom());
+	g.setColour(Colour(r.nextInt(),r.nextInt(),r.nextInt()));
+	g.fillAll();
 }
 
 BaslerCameraEditor::BaslerCameraEditor(GenericProcessor* parentNode,bool useDefaultParameterEditors)

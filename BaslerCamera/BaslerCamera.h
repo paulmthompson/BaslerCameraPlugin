@@ -53,6 +53,9 @@ public:
 	void startRecording();
 	void stopRecording();
 
+	bool enable() override;
+	bool disable() override;
+
 	void run();
 
 	AudioProcessorEditor* createEditor();

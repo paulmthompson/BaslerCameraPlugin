@@ -30,6 +30,24 @@ void BaslerCamera::stopRecording()
 
 void BaslerCamera::run()
 {
+
+	enable();
+}
+
+bool BaslerCamera::enable()
+{
+
+	BaslerCameraEditor* editor = (BaslerCameraEditor*) getEditor();
+	editor->enable();
+	return true;
+
+}
+
+bool BaslerCamera::disable()
+{
+	BaslerCameraEditor* editor = (BaslerCameraEditor*) getEditor();
+	editor->disable();
+	return true;
 }
 
 AudioProcessorEditor* BaslerCamera::createEditor()
