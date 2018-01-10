@@ -28,6 +28,7 @@ BaslerCameraCanvas::BaslerCameraCanvas(GenericProcessor* n)
 	cameraViewport->setViewedComponent(cameraViewer,false);
 	cameraViewport->setScrollBarsShown(true,true);
 	addAndMakeVisible(cameraViewport);
+	elapsedFrames = 0;
 	resized();
 	update();
 }
@@ -51,6 +52,7 @@ void BaslerCameraCanvas::buttonClicked(Button* btn)
 
 void BaslerCameraCanvas::refresh()
 {
+	elapsedFrames += 1;
 	repaint();
 }
 
@@ -60,7 +62,9 @@ void BaslerCameraCanvas::refreshState()
 
 void BaslerCameraCanvas::beginAnimation()
 {
-	startCallbacks();
+	//startCallbacks();
+	//This specifies the period in ms that the timer will get called
+	startTimer(1000);
 }
 
 void BaslerCameraCanvas::endAnimation()
@@ -81,6 +85,13 @@ void BaslerCameraCanvas::paint(Graphics& g)
 	Random& r(Random::getSystemRandom());
 	g.setColour(Colour(r.nextInt(),r.nextInt(),r.nextInt()));
 	g.fillAll();
+	g.setColour(Colours::black);
+	g.setFont(24.0f);
+
+	int64 mytime = CoreServices::getGlobalTimestamp();
+	float mysample = CoreServices::getGlobalSampleRate();
+
+	g.drawText(String(mytime/mysample),getLocalBounds(),Justification::centred,true);
 }
 
 BaslerCameraEditor::BaslerCameraEditor(GenericProcessor* parentNode,bool useDefaultParameterEditors)

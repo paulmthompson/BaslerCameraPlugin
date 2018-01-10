@@ -48,7 +48,12 @@ public:
 		return false;
 	}
 
-	void process(AudioSampleBuffer& buffer, MidiBuffer& events);
+	bool isReady() override
+	{
+		return true;
+	}
+
+	void process(AudioSampleBuffer& buffer) override;
 
 	void startRecording();
 	void stopRecording();

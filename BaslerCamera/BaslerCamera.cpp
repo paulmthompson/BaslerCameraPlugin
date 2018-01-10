@@ -16,7 +16,7 @@ BaslerCamera::~BaslerCamera()
 
 }
 
-void BaslerCamera::process(AudioSampleBuffer& buffer, MidiBuffer& events)
+void BaslerCamera::process(AudioSampleBuffer& buffer)
 {
 }
 

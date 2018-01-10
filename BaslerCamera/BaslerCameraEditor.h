@@ -74,6 +74,7 @@ public:
 	ScopedPointer<Viewport> cameraViewport;
 	SourceNode* processor;
 	ScopedPointer<BaslerCameraViewer> cameraViewer;
+	int elapsedFrames;
 };
 
 
