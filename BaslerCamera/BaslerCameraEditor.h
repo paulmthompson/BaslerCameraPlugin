@@ -29,11 +29,14 @@
 #include "../../Processors/Editors/GenericEditor.h"
 #include "../../Processors/Editors/VisualizerEditor.h"
 
-
+#include <pylon/PylonIncludes.h>
+//#ifdef PYLON_WIN_BUILD
+//#    include <pylon/PylonGUI.h>
+//#endif
 
 class BaslerCameraCanvas;
 
-
+using namespace Pylon;
 
 class BaslerCameraViewer : public Component,
 	Button::Listener, ComboBox::Listener

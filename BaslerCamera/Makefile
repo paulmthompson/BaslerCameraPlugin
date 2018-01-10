@@ -10,9 +10,16 @@ VPATH := $(SOURCE_DIRS)
 SRC := $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.cpp))
 OBJ := $(addprefix $(OBJDIR)/,$(notdir $(SRC:.cpp=.o)))
 
-CXXFLAGS += -I/opt/pylon5/include
+# Installation directories for pylon
+PYLON_ROOT ?= /opt/pylon5
 
-BLDCMD := $(CXX) -shared -o $(OUTDIR)/$(TARGET) $(OBJ) $(LDFLAGS) $(RESOURCES) $(TARGET_ARCH)
+CPPFLAGS   += $(shell $(PYLON_ROOT)/bin/pylon-config --cflags)
+LDFLAGS    += $(shell $(PYLON_ROOT)/bin/pylon-config --libs-rpath)
+LDLIBS     += $(shell $(PYLON_ROOT)/bin/pylon-config --libs)
+CXXFLAGS   += -I /opt/pylon5/include
+
+
+BLDCMD := $(CXX) -shared -o $(OUTDIR)/$(TARGET) $(OBJ) $(LDFLAGS) $(LDLIBS) $(RESOURCES) $(TARGET_ARCH)
 
 VPATH = $(SRC_DIR)
 

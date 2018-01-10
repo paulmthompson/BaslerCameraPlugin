@@ -4,9 +4,12 @@
 #include "../../Processors/SourceNode/SourceNode.h"
 
 #include <pylon/PylonIncludes.h>
-#ifdef PYLON_WIN_BUILD
-#    include <pylon/PylonGUI.h>
-#endif
+//#ifdef PYLON_WIN_BUILD
+//#    include <pylon/PylonGUI.h>
+//#endif
+
+// Namespace for using pylon objects.
+using namespace Pylon;
 
 BaslerCameraViewer::BaslerCameraViewer(GenericProcessor* proc_, Viewport* p, BaslerCameraCanvas* c) : viewport(p), canvas(c)
 {
@@ -97,6 +100,24 @@ void BaslerCameraCanvas::paint(Graphics& g)
 	float mysample = CoreServices::getGlobalSampleRate();
 
 	g.drawText(String(mytime/mysample),getLocalBounds(),Justification::centred,true);
+
+	// Create an instant camera object with the camera device found first.
+        CInstantCamera camera( CTlFactory::GetInstance().CreateFirstDevice());
+
+        // Print the model name of the camera.
+        std::cout << "Using device " << camera.GetDeviceInfo().GetModelName() << std::endl;
+
+        // The parameter MaxNumBuffer can be used to control the count of buffers
+        // allocated for grabbing. The default value of this parameter is 10.
+        camera.MaxNumBuffer = 5;
+
+        // Start the grabbing of c_countOfImagesToGrab images.
+        // The camera device is parameterized with a default configuration which
+        // sets up free-running continuous acquisition.
+        camera.StartGrabbing(1);
+
+        // This smart pointer will receive the grab result data.
+        CGrabResultPtr ptrGrabResult;
 }
 
 BaslerCameraEditor::BaslerCameraEditor(GenericProcessor* parentNode,bool useDefaultParameterEditors)
@@ -114,6 +135,9 @@ BaslerCameraEditor::BaslerCameraEditor(GenericProcessor* parentNode,bool useDefa
 	sourceCombo = new ComboBox();
 	sourceCombo->setBounds(110,25,220,20);
 	addAndMakeVisible(sourceCombo);
+
+	// Before using any pylon methods, the pylon runtime must be initialized. 
+    	PylonInitialize();
 }
 
 BaslerCameraEditor::~BaslerCameraEditor()
