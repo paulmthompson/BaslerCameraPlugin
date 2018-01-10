@@ -91,8 +91,8 @@ void BaslerCameraCanvas::setParameter(int a, int b, int c, float d)
 void BaslerCameraCanvas::paint(Graphics& g)
 {
 	Random& r(Random::getSystemRandom());
-	g.setColour(Colour(r.nextInt(),r.nextInt(),r.nextInt()));
-	g.fillAll();
+	//g.setColour(Colour(r.nextInt(),r.nextInt(),r.nextInt()));
+	//g.fillAll();
 	g.setColour(Colours::black);
 	g.setFont(24.0f);
 
@@ -118,6 +118,31 @@ void BaslerCameraCanvas::paint(Graphics& g)
 
         // This smart pointer will receive the grab result data.
         CGrabResultPtr ptrGrabResult;
+
+	camera.RetrieveResult( 5000, ptrGrabResult, TimeoutHandling_ThrowException);
+
+        // Image grabbed successfully?
+        if (ptrGrabResult->GrabSucceeded())
+        {
+                // Access the image data.
+        	std::cout << "SizeX: " << ptrGrabResult->GetWidth() << std::endl;
+		std::cout << "SizeY: " << ptrGrabResult->GetHeight() << std::endl;
+		std::cout << "Payload Size: " << ptrGrabResult->GetPayloadSize() << std::endl;
+        }
+
+	Image myImage(Image::ARGB, 640, 480, true);
+	Image::BitmapData temp(myImage,Image::BitmapData::ReadWriteMode::readWrite);
+	uint8 *mydata = (uint8 *) ptrGrabResult->GetBuffer();
+	for (int y = 0; y< 480; y++)
+	{
+		for (int x = 0; x<640; x++)
+		{
+			temp.setPixelColour(x,y,Colour::fromRGBA(0,0,0,mydata[640*y + x]));
+		}
+	}
+	g.drawImageAt(myImage,0,0);
+	std::cout << mydata[1] << std::endl;
+	//CImagePersistence::Save( ImageFileFormat_Png, "/home/wanglab/Pictures/GrabbedImage.png", ptrGrabResult);
 }
 
 BaslerCameraEditor::BaslerCameraEditor(GenericProcessor* parentNode,bool useDefaultParameterEditors)
