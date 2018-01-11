@@ -77,12 +77,15 @@ public:
 	ScopedPointer<Viewport> cameraViewport;
 	SourceNode* processor;
 	ScopedPointer<BaslerCameraViewer> cameraViewer;
-	int elapsedFrames;
+	CInstantCamera camera;
+	bool acquisitionActive;
+	
 };
 
 
 
 class BaslerCameraEditor : public VisualizerEditor, public ComboBox::Listener
+
 
 
 {
@@ -92,11 +95,13 @@ public:
 
 	void comboBoxChanged(ComboBox* comboBoxThatHasChanged);
 	Visualizer* createNewCanvas(void);
+	void buttonEvent(Button* button);
 
 private:
 
 	ScopedPointer<Label> sourceLabel;
 	ScopedPointer<ComboBox> sourceCombo;
+	ScopedPointer<UtilityButton> connectButton;
 
 	BaslerCameraCanvas* canvas;
 
