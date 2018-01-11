@@ -32,6 +32,7 @@ BaslerCameraCanvas::BaslerCameraCanvas(GenericProcessor* n)
 {
 	processor = (SourceNode*)n;
 	CInstantCamera camera();
+
 	cameraViewport = new Viewport();
 	cameraViewer = new BaslerCameraViewer(processor, cameraViewport, this);
 	cameraViewport->setViewedComponent(cameraViewer,false);
@@ -75,13 +76,17 @@ void BaslerCameraCanvas::beginAnimation()
 	camera.Attach(CTlFactory::GetInstance().CreateFirstDevice());
 	std::cout << "Using device " << camera.GetDeviceInfo().GetModelName() << std::endl;
 	acquisitionActive=true;
-	camera.StartGrabbing( GrabStrategy_LatestImageOnly);
-	startTimer(10);
+	camera.MaxNumBuffer = 35;
+	//camera.AcquisitionFrameRateEnable.SetValue(true);
+	//camera.ResultingFrameRate.GetValue();
+	camera.StartGrabbing();
+	startTimer(40); 
 }
 
 void BaslerCameraCanvas::endAnimation()
 {
 	acquisitionActive=false;
+	camera.StopGrabbing();
 	stopCallbacks();
 }
 
@@ -103,25 +108,29 @@ void BaslerCameraCanvas::paint(Graphics& g)
 
         // This smart pointer will receive the grab result data.
         CGrabResultPtr ptrGrabResult;
-
-	camera.RetrieveResult(0, ptrGrabResult, TimeoutHandling_ThrowException);
-
-        // Image grabbed successfully?
-        if (ptrGrabResult->GrabSucceeded())
+	Image myImage(Image::ARGB, 640, 480, true);
+	Image::BitmapData temp(myImage,Image::BitmapData::ReadWriteMode::readWrite);
+	
+	//camera.RetrieveResult(0, ptrGrabResult, TimeoutHandling_ThrowException);
+	int nBuffersInQueue = 0;
+	uint8 *mydata;
+        while( camera.RetrieveResult( 0, ptrGrabResult, TimeoutHandling_Return))
         {
-
-		Image myImage(Image::ARGB, 640, 480, true);
-		Image::BitmapData temp(myImage,Image::BitmapData::ReadWriteMode::readWrite);
-		uint8 *mydata = (uint8 *) ptrGrabResult->GetBuffer();
-		for (int y = 0; y< 480; y++)
-		{
-			for (int x = 0; x<640; x++)
-			{
-				temp.setPixelColour(x,y,Colour::fromRGBA(0,0,0,mydata[640*y + x]));
-			}
-		}
-		g.drawImageAt(myImage,0,0);
+            nBuffersInQueue++;
+	    mydata = (uint8 *) ptrGrabResult->GetBuffer();
         }
+
+        std::cout << "Retrieved " << nBuffersInQueue << " grab results from output queue." << std::endl;
+
+	for (int y = 0; y< 480; y++)
+	{
+		for (int x = 0; x<640; x++)
+		{
+			temp.setPixelColour(x,y,Colour::fromRGBA(0,0,0,mydata[640*y + x]));
+		}
+	}
+	
+	g.drawImageAt(myImage,0,0);
 
 	//Save data
 	//CImagePersistence::Save( ImageFileFormat_Png, "/home/wanglab/Pictures/GrabbedImage.png", ptrGrabResult);

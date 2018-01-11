@@ -77,7 +77,9 @@ public:
 	ScopedPointer<Viewport> cameraViewport;
 	SourceNode* processor;
 	ScopedPointer<BaslerCameraViewer> cameraViewer;
+
 	CInstantCamera camera;
+	
 	bool acquisitionActive;
 	
 };
