@@ -30,6 +30,8 @@
 #include "../../Processors/Editors/VisualizerEditor.h"
 
 #include <pylon/PylonIncludes.h>
+#include <pylon/usb/BaslerUsbInstantCamera.h>
+typedef Pylon::CBaslerUsbInstantCamera Camera_t;
 //#ifdef PYLON_WIN_BUILD
 //#    include <pylon/PylonGUI.h>
 //#endif
@@ -78,7 +80,7 @@ public:
 	SourceNode* processor;
 	ScopedPointer<BaslerCameraViewer> cameraViewer;
 
-	CInstantCamera camera;
+	Camera_t camera;
 	
 	bool acquisitionActive;
 	

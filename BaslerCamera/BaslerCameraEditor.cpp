@@ -4,11 +4,13 @@
 #include "../../Processors/SourceNode/SourceNode.h"
 
 #include <pylon/PylonIncludes.h>
+#include <pylon/usb/BaslerUsbInstantCamera.h>
 //#ifdef PYLON_WIN_BUILD
 //#    include <pylon/PylonGUI.h>
 //#endif
 
 // Namespace for using pylon objects.
+using namespace Basler_UsbCameraParams;
 using namespace Pylon;
 
 BaslerCameraViewer::BaslerCameraViewer(GenericProcessor* proc_, Viewport* p, BaslerCameraCanvas* c) : viewport(p), canvas(c)
@@ -31,7 +33,7 @@ void BaslerCameraViewer::comboBoxChanged(ComboBox* b)
 BaslerCameraCanvas::BaslerCameraCanvas(GenericProcessor* n)
 {
 	processor = (SourceNode*)n;
-	CInstantCamera camera();
+	Camera_t camera();
 
 	cameraViewport = new Viewport();
 	cameraViewer = new BaslerCameraViewer(processor, cameraViewport, this);
@@ -77,8 +79,20 @@ void BaslerCameraCanvas::beginAnimation()
 	std::cout << "Using device " << camera.GetDeviceInfo().GetModelName() << std::endl;
 	acquisitionActive=true;
 	camera.MaxNumBuffer = 35;
-	//camera.AcquisitionFrameRateEnable.SetValue(true);
-	//camera.ResultingFrameRate.GetValue();
+	camera.Open(); // Need to access parameters
+
+	std::cout << "Frame Rate " << camera.AcquisitionFrameRate.GetValue() << std::endl;
+	std::cout << "Exposure Time: " << camera.ExposureTime.GetValue() << std::endl;
+	
+	camera.AcquisitionFrameRateEnable.SetValue(true);
+	
+	camera.AcquisitionFrameRate.SetValue(500.0);
+	camera.ExposureTime.SetValue(1000.0);
+
+	//Resulting Frame Rate gives the real frame rate accounting for all of the camera
+	//configuration parameters such as the desired sampling rate and exposure time
+	std::cout << "Resulting Frame Rate " << camera.ResultingFrameRate.GetValue() << std::endl;
+
 	camera.StartGrabbing();
 	startTimer(40); 
 }
@@ -126,7 +140,7 @@ void BaslerCameraCanvas::paint(Graphics& g)
 	{
 		for (int x = 0; x<640; x++)
 		{
-			temp.setPixelColour(x,y,Colour::fromRGBA(0,0,0,mydata[640*y + x]));
+			temp.setPixelColour(x,y,Colour::fromRGBA(1,1,1,mydata[640*y + x]));
 		}
 	}
 	
