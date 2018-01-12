@@ -1,6 +1,8 @@
 
 #include "BaslerCameraEditor.h"
 #include <stdio.h>
+#include <fstream>
+#include <iostream>
 #include "../../Processors/SourceNode/SourceNode.h"
 
 #include <pylon/PylonIncludes.h>
@@ -125,15 +127,18 @@ void BaslerCameraCanvas::paint(Graphics& g)
 	Image myImage(Image::ARGB, 640, 480, true);
 	Image::BitmapData temp(myImage,Image::BitmapData::ReadWriteMode::readWrite);
 	
+	std::ofstream outbin("/mnt/data/Test/myfile.bin", std::ios::out | std::ios::binary | std::ios::app);
+
 	//camera.RetrieveResult(0, ptrGrabResult, TimeoutHandling_ThrowException);
 	int nBuffersInQueue = 0;
-	uint8 *mydata;
+	char *mydata;
         while( camera.RetrieveResult( 0, ptrGrabResult, TimeoutHandling_Return))
         {
-            nBuffersInQueue++;
-	    mydata = (uint8 *) ptrGrabResult->GetBuffer();
+            	nBuffersInQueue++;
+	    	mydata = (char *) ptrGrabResult->GetBuffer();
+		outbin.write(mydata,640*480);
         }
-
+	outbin.close();
         std::cout << "Retrieved " << nBuffersInQueue << " grab results from output queue." << std::endl;
 
 	for (int y = 0; y< 480; y++)
