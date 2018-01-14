@@ -15,6 +15,15 @@
 using namespace Basler_UsbCameraParams;
 using namespace Pylon;
 
+MyCamera::MyCamera()
+{
+	Camera_t camera();
+}
+
+MyCamera::~MyCamera()
+{
+}
+
 BaslerCameraViewer::BaslerCameraViewer(GenericProcessor* proc_, Viewport* p, BaslerCameraCanvas* c) : viewport(p), canvas(c)
 {
 	proc = (SourceNode*)proc_;
@@ -32,10 +41,11 @@ void BaslerCameraViewer::comboBoxChanged(ComboBox* b)
 {
 }
 
-BaslerCameraCanvas::BaslerCameraCanvas(GenericProcessor* n)
+BaslerCameraCanvas::BaslerCameraCanvas(GenericProcessor* n,MyCamera* mybasler)
 {
 	processor = (SourceNode*)n;
-	Camera_t camera();
+
+	basler = (MyCamera*) mybasler;
 
 	cameraViewport = new Viewport();
 	cameraViewer = new BaslerCameraViewer(processor, cameraViewport, this);
@@ -77,32 +87,31 @@ void BaslerCameraCanvas::beginAnimation()
 {
 	//startCallbacks();
 	//This specifies the period in ms that the timer will get called
-	camera.Attach(CTlFactory::GetInstance().CreateFirstDevice());
-	std::cout << "Using device " << camera.GetDeviceInfo().GetModelName() << std::endl;
+	std::cout << "Using device " << basler->camera.GetDeviceInfo().GetModelName() << std::endl;
 	acquisitionActive=true;
-	camera.MaxNumBuffer = 35;
-	camera.Open(); // Need to access parameters
+	basler->camera.MaxNumBuffer = 35;
+	basler->camera.Open(); // Need to access parameters
 
-	std::cout << "Frame Rate " << camera.AcquisitionFrameRate.GetValue() << std::endl;
-	std::cout << "Exposure Time: " << camera.ExposureTime.GetValue() << std::endl;
+	std::cout << "Frame Rate " << basler->camera.AcquisitionFrameRate.GetValue() << std::endl;
+	std::cout << "Exposure Time: " << basler->camera.ExposureTime.GetValue() << std::endl;
 	
-	camera.AcquisitionFrameRateEnable.SetValue(true);
+	basler->camera.AcquisitionFrameRateEnable.SetValue(true);
 	
-	camera.AcquisitionFrameRate.SetValue(500.0);
-	camera.ExposureTime.SetValue(1000.0);
+	basler->camera.AcquisitionFrameRate.SetValue(500.0);
+	basler->camera.ExposureTime.SetValue(1000.0);
 
 	//Resulting Frame Rate gives the real frame rate accounting for all of the camera
 	//configuration parameters such as the desired sampling rate and exposure time
-	std::cout << "Resulting Frame Rate " << camera.ResultingFrameRate.GetValue() << std::endl;
+	std::cout << "Resulting Frame Rate " << basler->camera.ResultingFrameRate.GetValue() << std::endl;
 
-	camera.StartGrabbing();
+	basler->camera.StartGrabbing();
 	startTimer(40); 
 }
 
 void BaslerCameraCanvas::endAnimation()
 {
 	acquisitionActive=false;
-	camera.StopGrabbing();
+	basler->camera.StopGrabbing();
 	stopCallbacks();
 }
 
@@ -118,7 +127,7 @@ void BaslerCameraCanvas::setParameter(int a, int b, int c, float d)
 void BaslerCameraCanvas::paint(Graphics& g)
 {
 
-	if (acquisitionActive != false && camera.IsPylonDeviceAttached()) {
+	if (acquisitionActive != false && basler->camera.IsPylonDeviceAttached()) {
 	int64 mytime = CoreServices::getGlobalTimestamp();
 	float mysample = CoreServices::getGlobalSampleRate();    
 
@@ -132,7 +141,7 @@ void BaslerCameraCanvas::paint(Graphics& g)
 	//camera.RetrieveResult(0, ptrGrabResult, TimeoutHandling_ThrowException);
 	int nBuffersInQueue = 0;
 	char *mydata;
-        while( camera.RetrieveResult( 0, ptrGrabResult, TimeoutHandling_Return))
+        while( basler->camera.RetrieveResult( 0, ptrGrabResult, TimeoutHandling_Return))
         {
             	nBuffersInQueue++;
 	    	mydata = (char *) ptrGrabResult->GetBuffer();
@@ -181,6 +190,9 @@ BaslerCameraEditor::BaslerCameraEditor(GenericProcessor* parentNode,bool useDefa
 	connectButton->addListener(this);
 	addAndMakeVisible(connectButton);
 
+	basler = new MyCamera();
+	basler->camera.Attach(CTlFactory::GetInstance().CreateFirstDevice());
+	std::cout << "Using device " << basler->camera.GetDeviceInfo().GetModelName() << std::endl;
 }
 
 BaslerCameraEditor::~BaslerCameraEditor()
@@ -198,13 +210,17 @@ void BaslerCameraEditor::buttonEvent(Button* button)
 	{
 		// Before using any pylon methods, the pylon runtime must be initialized. 
 		std::cout << "Hello" << std::endl;
+		//basler->camera.Attach(CTlFactory::GetInstance().CreateFirstDevice());
+		std::cout << "Using device " << basler->camera.GetDeviceInfo().GetModelName() << std::endl;
 	}
 }
 
 Visualizer* BaslerCameraEditor::createNewCanvas()
 {
 	GenericProcessor* processor = (GenericProcessor*) getProcessor();
-	canvas = new BaslerCameraCanvas(processor);
+	canvas = new BaslerCameraCanvas(processor,basler);
 	return canvas;
 
 }
+
+	

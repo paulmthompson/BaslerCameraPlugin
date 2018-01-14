@@ -40,6 +40,15 @@ class BaslerCameraCanvas;
 
 using namespace Pylon;
 
+class MyCamera
+{
+public:
+	MyCamera();
+	~MyCamera();
+
+	Camera_t camera;
+};
+
 class BaslerCameraViewer : public Component,
 	Button::Listener, ComboBox::Listener
 {
@@ -62,7 +71,7 @@ private:
 class BaslerCameraCanvas : public Visualizer, public Button::Listener
 {
 public:
-	BaslerCameraCanvas(GenericProcessor* n);
+	BaslerCameraCanvas(GenericProcessor* n,MyCamera* mybasler);
 	~BaslerCameraCanvas();
 
 	void paint(Graphics& g);
@@ -80,9 +89,10 @@ public:
 	SourceNode* processor;
 	ScopedPointer<BaslerCameraViewer> cameraViewer;
 
-	Camera_t camera;
-	
+	//Camera_t camera;
 	bool acquisitionActive;
+private:
+	MyCamera* basler;
 	
 };
 
@@ -100,6 +110,9 @@ public:
 	void comboBoxChanged(ComboBox* comboBoxThatHasChanged);
 	Visualizer* createNewCanvas(void);
 	void buttonEvent(Button* button);
+	float frameRate;
+	float gain;
+	int exposureTime;
 
 private:
 
@@ -108,6 +121,8 @@ private:
 	ScopedPointer<UtilityButton> connectButton;
 
 	BaslerCameraCanvas* canvas;
+	MyCamera* basler;
+	
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BaslerCameraEditor);
 
