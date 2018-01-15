@@ -26,6 +26,7 @@
 
 #include <EditorHeaders.h>
 #include "BaslerCamera.h"
+#include <stdio.h>
 #include "../../Processors/Editors/GenericEditor.h"
 #include "../../Processors/Editors/VisualizerEditor.h"
 
@@ -52,6 +53,7 @@ public:
 	float frameRate;
 	float gain;
 	int exposureTime;
+	std::string saveFilePath;
 };
 
 class BaslerCameraViewer : public Component,
@@ -120,6 +122,7 @@ private:
 	ScopedPointer<Label> sourceLabel;
 	ScopedPointer<ComboBox> sourceCombo;
 	ScopedPointer<UtilityButton> connectButton;
+	ScopedPointer<UtilityButton> sourceButton;
 	ScopedPointer<Slider> frameRateSlider;
 	ScopedPointer<Label> frameRateLabel;
 	ScopedPointer<Slider> exposureTimeSlider;

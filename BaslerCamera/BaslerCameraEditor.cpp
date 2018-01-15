@@ -23,6 +23,7 @@ MyCamera::MyCamera()
 	frameRate = 500.0;
 	gain = 13.0;
 	exposureTime = 1000;
+	saveFilePath = "/mnt/data/Test/myfile.bin";
 }
 
 MyCamera::~MyCamera()
@@ -122,7 +123,7 @@ void BaslerCameraCanvas::paint(Graphics& g)
 	Image myImage(Image::ARGB, 640, 480, true);
 	Image::BitmapData temp(myImage,Image::BitmapData::ReadWriteMode::readWrite);
 	
-	std::ofstream outbin("/mnt/data/Test/myfile.bin", std::ios::out | std::ios::binary | std::ios::app);
+	std::ofstream outbin(const_cast<char*>(basler->saveFilePath.c_str()), std::ios::out | std::ios::binary | std::ios::app);
 
 	//camera.RetrieveResult(0, ptrGrabResult, TimeoutHandling_ThrowException);
 	int nBuffersInQueue = 0;
@@ -163,13 +164,21 @@ BaslerCameraEditor::BaslerCameraEditor(GenericProcessor* parentNode,bool useDefa
 	canvas = nullptr;
 	tabText = "Camera";
 
+
 	sourceLabel = new Label("video source", "Source");
 	sourceLabel->setBounds(10,25,90,20);
 	addAndMakeVisible(sourceLabel);
 
+	/*
 	sourceCombo = new ComboBox();
 	sourceCombo->setBounds(110,25,220,20);
 	addAndMakeVisible(sourceCombo);
+	*/
+
+	sourceButton = new UtilityButton("Save Location",titleFont);
+	sourceButton->setBounds(110,25,220,20);
+	sourceButton->addListener(this);
+	addAndMakeVisible(sourceButton);
 
 	connectButton = new UtilityButton("Connect", titleFont);
 	connectButton->setBounds(10,50,90,20);
@@ -260,6 +269,18 @@ void BaslerCameraEditor::buttonEvent(Button* button)
 		} else {
 			std::cout << "Camera was not able to be initialized. Is one connected?" << std::endl;
 		}
+	} else if (button == sourceButton) 
+	{
+
+		 FileChooser myChooser ("Save Location",File::getSpecialLocation (File::userHomeDirectory),"*");
+
+		if (myChooser.browseForFileToSave(true))
+    		{
+        		File saveFileLocation (myChooser.getResult());
+			String saveFile = saveFileLocation.getFullPathName();
+			basler->saveFilePath = saveFile.toStdString();
+    		}
+
 	}
 }
 
