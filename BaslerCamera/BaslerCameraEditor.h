@@ -119,6 +119,10 @@ private:
 	ScopedPointer<Label> sourceLabel;
 	ScopedPointer<ComboBox> sourceCombo;
 	ScopedPointer<UtilityButton> connectButton;
+	ScopedPointer<Slider> frameRateSlider;
+	ScopedPointer<Label> frameRateLabel;
+	ScopedPointer<Slider> exposureTimeSlider;
+	ScopedPointer<Label> exposureTimeLabel;
 
 	BaslerCameraCanvas* canvas;
 	MyCamera* basler;

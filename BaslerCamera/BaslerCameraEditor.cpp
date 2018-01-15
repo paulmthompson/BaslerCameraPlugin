@@ -159,7 +159,7 @@ BaslerCameraEditor::BaslerCameraEditor(GenericProcessor* parentNode,bool useDefa
 {
 	PylonInitialize();
 
-	desiredWidth = 340;
+	desiredWidth = 400;
 	canvas = nullptr;
 	tabText = "Camera";
 
@@ -175,6 +175,26 @@ BaslerCameraEditor::BaslerCameraEditor(GenericProcessor* parentNode,bool useDefa
 	connectButton->setBounds(10,50,90,20);
 	connectButton->addListener(this);
 	addAndMakeVisible(connectButton);
+
+	frameRateLabel = new Label("frame rate label", "Frame Rate (fps)");
+	frameRateLabel->setBounds(10,75,120,20);
+	addAndMakeVisible(frameRateLabel);
+
+	frameRateSlider = new Slider();
+	frameRateSlider->setBounds(130,75,220,20);
+	addAndMakeVisible(frameRateSlider);
+	frameRateSlider->setRange(1.0, 500.0, 1.0);
+	frameRateSlider->setValue(500.0);
+
+	exposureTimeLabel = new Label("exposure time label", "Exposure Time (us)");
+	exposureTimeLabel->setBounds(10,100,120,20);
+	addAndMakeVisible(exposureTimeLabel);
+
+	exposureTimeSlider = new Slider();
+	exposureTimeSlider->setBounds(130,100,220,20);
+	exposureTimeSlider->setRange(200.0,5000.0,1.0);
+	exposureTimeSlider->setValue(1000.0);
+	addAndMakeVisible(exposureTimeSlider);
 
 	basler = new MyCamera();
 }
