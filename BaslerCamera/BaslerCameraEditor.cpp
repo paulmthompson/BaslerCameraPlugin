@@ -182,9 +182,11 @@ BaslerCameraEditor::BaslerCameraEditor(GenericProcessor* parentNode,bool useDefa
 
 	frameRateSlider = new Slider();
 	frameRateSlider->setBounds(130,75,220,20);
-	addAndMakeVisible(frameRateSlider);
 	frameRateSlider->setRange(1.0, 500.0, 1.0);
 	frameRateSlider->setValue(500.0);
+	frameRateSlider->addListener(this);
+	addAndMakeVisible(frameRateSlider);
+	
 
 	exposureTimeLabel = new Label("exposure time label", "Exposure Time (us)");
 	exposureTimeLabel->setBounds(10,100,120,20);
@@ -194,6 +196,7 @@ BaslerCameraEditor::BaslerCameraEditor(GenericProcessor* parentNode,bool useDefa
 	exposureTimeSlider->setBounds(130,100,220,20);
 	exposureTimeSlider->setRange(200.0,5000.0,1.0);
 	exposureTimeSlider->setValue(1000.0);
+	exposureTimeSlider->addListener(this);
 	addAndMakeVisible(exposureTimeSlider);
 
 	basler = new MyCamera();
@@ -206,6 +209,26 @@ BaslerCameraEditor::~BaslerCameraEditor()
 void BaslerCameraEditor::comboBoxChanged(ComboBox* cb)
 {
 
+}
+
+void BaslerCameraEditor::sliderEvent(Slider* slider)
+{
+	if (basler->attached) {
+		if (slider == exposureTimeSlider)
+		{
+		
+			double myvalue = slider->getValue();
+			basler->camera.ExposureTime.SetValue(myvalue);
+
+		} else if (frameRateSlider) {
+		
+			double myvalue = slider->getValue();
+			basler->camera.AcquisitionFrameRate.SetValue(myvalue);
+
+		}
+
+		std::cout << "Resulting Frame Rate " << basler->camera.ResultingFrameRate.GetValue() << std::endl;
+	}
 }
 
 void BaslerCameraEditor::buttonEvent(Button* button)

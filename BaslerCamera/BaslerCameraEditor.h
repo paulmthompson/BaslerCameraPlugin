@@ -113,6 +113,7 @@ public:
 	void comboBoxChanged(ComboBox* comboBoxThatHasChanged);
 	Visualizer* createNewCanvas(void);
 	void buttonEvent(Button* button);
+	void sliderEvent(Slider* slider);
 	
 private:
 
