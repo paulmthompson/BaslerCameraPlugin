@@ -140,7 +140,7 @@ void BaslerCameraCanvas::paint(Graphics& g)
 	{
 		for (int x = 0; x<640; x++)
 		{
-			temp.setPixelColour(x,y,Colour::fromRGBA(1,1,1,mydata[640*y + x]));
+			temp.setPixelColour(x,y,Colour::fromRGBA(0,0,0,255 - mydata[640*y + x]));
 		}
 	}
 	
