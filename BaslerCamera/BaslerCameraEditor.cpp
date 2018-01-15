@@ -18,6 +18,7 @@ using namespace Pylon;
 MyCamera::MyCamera()
 {
 	Camera_t camera();
+	attached = false;
 }
 
 MyCamera::~MyCamera()
@@ -86,24 +87,7 @@ void BaslerCameraCanvas::refreshState()
 void BaslerCameraCanvas::beginAnimation()
 {
 	//startCallbacks();
-	//This specifies the period in ms that the timer will get called
-	std::cout << "Using device " << basler->camera.GetDeviceInfo().GetModelName() << std::endl;
 	acquisitionActive=true;
-	basler->camera.MaxNumBuffer = 35;
-	basler->camera.Open(); // Need to access parameters
-
-	std::cout << "Frame Rate " << basler->camera.AcquisitionFrameRate.GetValue() << std::endl;
-	std::cout << "Exposure Time: " << basler->camera.ExposureTime.GetValue() << std::endl;
-	
-	basler->camera.AcquisitionFrameRateEnable.SetValue(true);
-	
-	basler->camera.AcquisitionFrameRate.SetValue(500.0);
-	basler->camera.ExposureTime.SetValue(1000.0);
-
-	//Resulting Frame Rate gives the real frame rate accounting for all of the camera
-	//configuration parameters such as the desired sampling rate and exposure time
-	std::cout << "Resulting Frame Rate " << basler->camera.ResultingFrameRate.GetValue() << std::endl;
-
 	basler->camera.StartGrabbing();
 	startTimer(40); 
 }
@@ -123,11 +107,10 @@ void BaslerCameraCanvas::setParameter(int a, int b, int c, float d)
 {
 }
 
-
 void BaslerCameraCanvas::paint(Graphics& g)
 {
 
-	if (acquisitionActive != false && basler->camera.IsPylonDeviceAttached()) {
+	if (acquisitionActive != false && basler->attached) {
 	int64 mytime = CoreServices::getGlobalTimestamp();
 	float mysample = CoreServices::getGlobalSampleRate();    
 
@@ -191,8 +174,6 @@ BaslerCameraEditor::BaslerCameraEditor(GenericProcessor* parentNode,bool useDefa
 	addAndMakeVisible(connectButton);
 
 	basler = new MyCamera();
-	basler->camera.Attach(CTlFactory::GetInstance().CreateFirstDevice());
-	std::cout << "Using device " << basler->camera.GetDeviceInfo().GetModelName() << std::endl;
 }
 
 BaslerCameraEditor::~BaslerCameraEditor()
@@ -209,9 +190,30 @@ void BaslerCameraEditor::buttonEvent(Button* button)
 	if (button==connectButton)
 	{
 		// Before using any pylon methods, the pylon runtime must be initialized. 
-		std::cout << "Hello" << std::endl;
-		//basler->camera.Attach(CTlFactory::GetInstance().CreateFirstDevice());
-		std::cout << "Using device " << basler->camera.GetDeviceInfo().GetModelName() << std::endl;
+		basler->camera.Attach(CTlFactory::GetInstance().CreateFirstDevice());
+		if (basler->camera.IsPylonDeviceAttached())
+		{
+			std::cout << "Using device " << basler->camera.GetDeviceInfo().GetModelName() << std::endl;
+			basler->attached = true;
+
+			basler->camera.MaxNumBuffer = 35;
+			basler->camera.Open(); // Need to access parameters
+
+			std::cout << "Frame Rate " << basler->camera.AcquisitionFrameRate.GetValue() << std::endl;
+			std::cout << "Exposure Time: " << basler->camera.ExposureTime.GetValue() << std::endl;
+	
+			basler->camera.AcquisitionFrameRateEnable.SetValue(true);
+	
+			basler->camera.AcquisitionFrameRate.SetValue(500.0);
+			basler->camera.ExposureTime.SetValue(1000.0);
+
+			//Resulting Frame Rate gives the real frame rate accounting for all of the camera
+			//configuration parameters such as the desired sampling rate and exposure time
+			std::cout << "Resulting Frame Rate " << basler->camera.ResultingFrameRate.GetValue() << std::endl;
+
+		} else {
+			std::cout << "Camera was not able to be initialized. Is one connected?" << std::endl;
+		}
 	}
 }
 

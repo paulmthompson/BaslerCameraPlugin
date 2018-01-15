@@ -47,6 +47,7 @@ public:
 	~MyCamera();
 
 	Camera_t camera;
+	bool attached;
 };
 
 class BaslerCameraViewer : public Component,
@@ -89,7 +90,6 @@ public:
 	SourceNode* processor;
 	ScopedPointer<BaslerCameraViewer> cameraViewer;
 
-	//Camera_t camera;
 	bool acquisitionActive;
 private:
 	MyCamera* basler;
