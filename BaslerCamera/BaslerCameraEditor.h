@@ -48,6 +48,10 @@ public:
 
 	Camera_t camera;
 	bool attached;
+	bool acquisitionActive;
+	float frameRate;
+	float gain;
+	int exposureTime;
 };
 
 class BaslerCameraViewer : public Component,
@@ -90,7 +94,6 @@ public:
 	SourceNode* processor;
 	ScopedPointer<BaslerCameraViewer> cameraViewer;
 
-	bool acquisitionActive;
 private:
 	MyCamera* basler;
 	
@@ -110,10 +113,7 @@ public:
 	void comboBoxChanged(ComboBox* comboBoxThatHasChanged);
 	Visualizer* createNewCanvas(void);
 	void buttonEvent(Button* button);
-	float frameRate;
-	float gain;
-	int exposureTime;
-
+	
 private:
 
 	ScopedPointer<Label> sourceLabel;

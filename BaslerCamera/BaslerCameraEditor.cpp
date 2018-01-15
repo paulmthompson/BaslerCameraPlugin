@@ -19,6 +19,10 @@ MyCamera::MyCamera()
 {
 	Camera_t camera();
 	attached = false;
+	acquisitionActive = false;
+	frameRate = 500.0;
+	gain = 13.0;
+	exposureTime = 1000;
 }
 
 MyCamera::~MyCamera()
@@ -53,7 +57,6 @@ BaslerCameraCanvas::BaslerCameraCanvas(GenericProcessor* n,MyCamera* mybasler)
 	cameraViewport->setViewedComponent(cameraViewer,false);
 	cameraViewport->setScrollBarsShown(true,true);
 	addAndMakeVisible(cameraViewport);
-	acquisitionActive = false;
 	resized();
 	update();
 }
@@ -87,14 +90,14 @@ void BaslerCameraCanvas::refreshState()
 void BaslerCameraCanvas::beginAnimation()
 {
 	//startCallbacks();
-	acquisitionActive=true;
+	basler->acquisitionActive=true;
 	basler->camera.StartGrabbing();
 	startTimer(40); 
 }
 
 void BaslerCameraCanvas::endAnimation()
 {
-	acquisitionActive=false;
+	basler->acquisitionActive=false;
 	basler->camera.StopGrabbing();
 	stopCallbacks();
 }
@@ -110,7 +113,7 @@ void BaslerCameraCanvas::setParameter(int a, int b, int c, float d)
 void BaslerCameraCanvas::paint(Graphics& g)
 {
 
-	if (acquisitionActive != false && basler->attached) {
+	if (basler->acquisitionActive != false && basler->attached) {
 	int64 mytime = CoreServices::getGlobalTimestamp();
 	float mysample = CoreServices::getGlobalSampleRate();    
 
