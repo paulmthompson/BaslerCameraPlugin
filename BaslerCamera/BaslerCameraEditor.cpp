@@ -164,26 +164,26 @@ BaslerCameraEditor::BaslerCameraEditor(GenericProcessor* parentNode,bool useDefa
 	canvas = nullptr;
 	tabText = "Camera";
 
-
-	sourceLabel = new Label("video source", "Source");
-	sourceLabel->setBounds(10,25,90,20);
-	addAndMakeVisible(sourceLabel);
-
-	/*
-	sourceCombo = new ComboBox();
-	sourceCombo->setBounds(110,25,220,20);
-	addAndMakeVisible(sourceCombo);
-	*/
-
-	sourceButton = new UtilityButton("Save Location",titleFont);
+	sourceButton = new UtilityButton("Change Save Location",titleFont);
 	sourceButton->setBounds(110,25,220,20);
 	sourceButton->addListener(this);
 	addAndMakeVisible(sourceButton);
 
 	connectButton = new UtilityButton("Connect", titleFont);
-	connectButton->setBounds(10,50,90,20);
+	connectButton->setBounds(10,25,90,20);
 	connectButton->addListener(this);
 	addAndMakeVisible(connectButton);
+
+	gainLabel = new Label("gain label", "Gain");
+	gainLabel->setBounds(10,50,120,20);
+	addAndMakeVisible(gainLabel);
+
+	gainSlider = new Slider();
+	gainSlider->setBounds(130,50,220,20);
+	gainSlider->setRange(0.0,13.0,0.1);
+	gainSlider->setValue(13.0);
+	gainSlider->addListener(this);
+	addAndMakeVisible(gainSlider);
 
 	frameRateLabel = new Label("frame rate label", "Frame Rate (fps)");
 	frameRateLabel->setBounds(10,75,120,20);
@@ -196,7 +196,6 @@ BaslerCameraEditor::BaslerCameraEditor(GenericProcessor* parentNode,bool useDefa
 	frameRateSlider->addListener(this);
 	addAndMakeVisible(frameRateSlider);
 	
-
 	exposureTimeLabel = new Label("exposure time label", "Exposure Time (us)");
 	exposureTimeLabel->setBounds(10,100,120,20);
 	addAndMakeVisible(exposureTimeLabel);
@@ -233,6 +232,13 @@ void BaslerCameraEditor::sliderEvent(Slider* slider)
 		
 			double myvalue = slider->getValue();
 			basler->camera.AcquisitionFrameRate.SetValue(myvalue);
+
+		} else if (gainSlider) {
+			
+			/*
+			double myvalue = slider->getValue();
+			basler->camera.Gain.SetValue(myvalue);
+			*/
 
 		}
 

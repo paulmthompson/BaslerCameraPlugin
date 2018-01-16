@@ -127,6 +127,8 @@ private:
 	ScopedPointer<Label> frameRateLabel;
 	ScopedPointer<Slider> exposureTimeSlider;
 	ScopedPointer<Label> exposureTimeLabel;
+	ScopedPointer<Slider> gainSlider;
+	ScopedPointer<Label> gainLabel;
 
 	BaslerCameraCanvas* canvas;
 	MyCamera* basler;
