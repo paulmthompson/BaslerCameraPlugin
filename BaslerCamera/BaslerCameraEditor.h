@@ -54,6 +54,7 @@ public:
 	float gain;
 	int exposureTime;
 	std::string saveFilePath;
+	bool saveData;
 };
 
 class BaslerCameraViewer : public Component,
@@ -129,6 +130,8 @@ private:
 	ScopedPointer<Label> exposureTimeLabel;
 	ScopedPointer<Slider> gainSlider;
 	ScopedPointer<Label> gainLabel;
+
+	ScopedPointer<ToggleButton> saveButton;
 
 	BaslerCameraCanvas* canvas;
 	MyCamera* basler;

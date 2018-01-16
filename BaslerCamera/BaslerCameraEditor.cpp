@@ -20,6 +20,7 @@ MyCamera::MyCamera()
 	Camera_t camera();
 	attached = false;
 	acquisitionActive = false;
+	saveData=false;
 	frameRate = 500.0;
 	gain = 13.0;
 	exposureTime = 1000;
@@ -123,18 +124,29 @@ void BaslerCameraCanvas::paint(Graphics& g)
 	Image myImage(Image::ARGB, 640, 480, true);
 	Image::BitmapData temp(myImage,Image::BitmapData::ReadWriteMode::readWrite);
 	
-	std::ofstream outbin(const_cast<char*>(basler->saveFilePath.c_str()), std::ios::out | std::ios::binary | std::ios::app);
-
-	//camera.RetrieveResult(0, ptrGrabResult, TimeoutHandling_ThrowException);
 	int nBuffersInQueue = 0;
 	char *mydata;
-        while( basler->camera.RetrieveResult( 0, ptrGrabResult, TimeoutHandling_Return))
-        {
-            	nBuffersInQueue++;
-	    	mydata = (char *) ptrGrabResult->GetBuffer();
-		outbin.write(mydata,640*480);
-        }
-	outbin.close();
+
+	if (basler->saveData) {
+		std::ofstream outbin(const_cast<char*>(basler->saveFilePath.c_str()), std::ios::out | std::ios::binary | std::ios::app);	
+
+		
+        	while( basler->camera.RetrieveResult( 0, ptrGrabResult, TimeoutHandling_Return))
+        	{
+            		nBuffersInQueue++;
+	    		mydata = (char *) ptrGrabResult->GetBuffer();
+			outbin.write(mydata,640*480);
+        	}
+		outbin.close();
+	} else {
+
+		while( basler->camera.RetrieveResult( 0, ptrGrabResult, TimeoutHandling_Return))
+        	{
+            		nBuffersInQueue++;
+			mydata = (char *) ptrGrabResult->GetBuffer();
+        	}
+		
+	}
         std::cout << "Retrieved " << nBuffersInQueue << " grab results from output queue." << std::endl;
 
 	for (int y = 0; y< 480; y++)
@@ -173,6 +185,11 @@ BaslerCameraEditor::BaslerCameraEditor(GenericProcessor* parentNode,bool useDefa
 	connectButton->setBounds(10,25,90,20);
 	connectButton->addListener(this);
 	addAndMakeVisible(connectButton);
+
+	saveButton = new ToggleButton("Save");
+	saveButton->setBounds(340,25,50,20);
+	saveButton->addListener(this);
+	addAndMakeVisible(saveButton);
 
 	gainLabel = new Label("gain label", "Gain");
 	gainLabel->setBounds(10,50,120,20);
@@ -287,6 +304,9 @@ void BaslerCameraEditor::buttonEvent(Button* button)
 			basler->saveFilePath = saveFile.toStdString();
     		}
 
+	} else if (button == saveButton)
+	{
+		basler->saveData = button->getToggleState();
 	}
 }
 
