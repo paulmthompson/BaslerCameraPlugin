@@ -3,10 +3,13 @@
 #include <stdio.h>
 #include <fstream>
 #include <iostream>
+#include <errno.h>
 #include "../../Processors/SourceNode/SourceNode.h"
 
 #include <pylon/PylonIncludes.h>
 #include <pylon/usb/BaslerUsbInstantCamera.h>
+#include <pylon/AviCompressionOptions.h>
+
 //#ifdef PYLON_WIN_BUILD
 //#    include <pylon/PylonGUI.h>
 //#endif
@@ -116,8 +119,9 @@ void BaslerCameraCanvas::paint(Graphics& g)
 {
 
 	if (basler->acquisitionActive != false && basler->attached) {
-	int64 mytime = CoreServices::getGlobalTimestamp();
-	float mysample = CoreServices::getGlobalSampleRate();    
+
+		int64 mytime = CoreServices::getGlobalTimestamp();
+		float mysample = CoreServices::getGlobalSampleRate();    
 
         // This smart pointer will receive the grab result data.
         CGrabResultPtr ptrGrabResult;
@@ -128,26 +132,28 @@ void BaslerCameraCanvas::paint(Graphics& g)
 	char *mydata;
 
 	if (basler->saveData) {
-		std::ofstream outbin(const_cast<char*>(basler->saveFilePath.c_str()), std::ios::out | std::ios::binary | std::ios::app);	
-
+		//std::ofstream outbin(const_cast<char*>(basler->saveFilePath.c_str()), std::ios::out | std::ios::binary | std::ios::app);	
 		
         	while( basler->camera.RetrieveResult( 0, ptrGrabResult, TimeoutHandling_Return))
         	{
-            		nBuffersInQueue++;
+            	nBuffersInQueue++;
 	    		mydata = (char *) ptrGrabResult->GetBuffer();
-			outbin.write(mydata,640*480);
+				fwrite(mydata, sizeof(char)*640*480, 1, basler->ffmpeg);
+				//basler->aviWriter.Add(ptrGrabResult);
+				//outbin.write(mydata,640*480);
         	}
-		outbin.close();
+			
+		//outbin.close();
 	} else {
 
 		while( basler->camera.RetrieveResult( 0, ptrGrabResult, TimeoutHandling_Return))
         	{
-            		nBuffersInQueue++;
-			mydata = (char *) ptrGrabResult->GetBuffer();
+            	nBuffersInQueue++;
+				mydata = (char *) ptrGrabResult->GetBuffer();
         	}
 		
 	}
-        std::cout << "Retrieved " << nBuffersInQueue << " grab results from output queue." << std::endl;
+        //std::cout << "Retrieved " << nBuffersInQueue << " grab results from output queue." << std::endl;
 
 	for (int y = 0; y< 480; y++)
 	{
@@ -159,10 +165,7 @@ void BaslerCameraCanvas::paint(Graphics& g)
 	
 	g.drawImageAt(myImage,0,0);
 
-	//Save data
-	//CImagePersistence::Save( ImageFileFormat_Png, "/home/wanglab/Pictures/GrabbedImage.png", ptrGrabResult);
-
-	std::cout << mytime / mysample << std::endl;
+	//std::cout << mytime / mysample << std::endl;
 	}
 }
 
@@ -170,6 +173,7 @@ BaslerCameraEditor::BaslerCameraEditor(GenericProcessor* parentNode,bool useDefa
 	: VisualizerEditor(parentNode, useDefaultParameterEditors)
 
 {
+	std::ios_base::sync_with_stdio(false);
 	PylonInitialize();
 
 	desiredWidth = 400;
@@ -300,13 +304,25 @@ void BaslerCameraEditor::buttonEvent(Button* button)
 		if (myChooser.browseForFileToSave(true))
     		{
         		File saveFileLocation (myChooser.getResult());
-			String saveFile = saveFileLocation.getFullPathName();
-			basler->saveFilePath = saveFile.toStdString();
+				String saveFile = saveFileLocation.getFullPathName();
+				basler->saveFilePath = saveFile.toStdString();
     		}
 
 	} else if (button == saveButton)
 	{
-		basler->saveData = button->getToggleState();
+
+		bool myState = button->getToggleState();
+		if (myState) {
+			const char* cmd = "C:/Users/Paul/Downloads/ffmpeg-3.4.1-win64-static/ffmpeg-3.4.1-win64-static/bin/ffmpeg -f rawvideo -pix_fmt gray -s 640x480 -r 500 -i - -y -pix_fmt nv12 -vcodec h264_qsv -preset veryfast -look_ahead 0 output.mp4";
+			basler->ffmpeg = _popen(cmd, "wb");
+			if (basler->ffmpeg == NULL) {
+				printf("Error opening file unexist.ent: %s\n", strerror(errno));
+			}
+		}
+		else {
+			_pclose(basler->ffmpeg);
+		}
+		basler->saveData = myState;
 	}
 }
 

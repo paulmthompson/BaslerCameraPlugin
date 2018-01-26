@@ -32,6 +32,7 @@
 
 #include <pylon/PylonIncludes.h>
 #include <pylon/usb/BaslerUsbInstantCamera.h>
+#include <pylon/AviCompressionOptions.h>
 typedef Pylon::CBaslerUsbInstantCamera Camera_t;
 //#ifdef PYLON_WIN_BUILD
 //#    include <pylon/PylonGUI.h>
@@ -55,6 +56,7 @@ public:
 	int exposureTime;
 	std::string saveFilePath;
 	bool saveData;
+	FILE* ffmpeg;
 };
 
 class BaslerCameraViewer : public Component,
