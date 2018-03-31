@@ -27,7 +27,7 @@ MyCamera::MyCamera()
 	frameRate = 500.0;
 	gain = 13.0;
 	exposureTime = 1000;
-	saveFilePath = "/mnt/data/Test/myfile.bin";
+	saveFilePath = "D:\Data\Video\myfile.bin";
 }
 
 MyCamera::~MyCamera()
@@ -85,6 +85,34 @@ void BaslerCameraCanvas::buttonClicked(Button* btn)
 
 void BaslerCameraCanvas::refresh()
 {
+	int64 mytime = CoreServices::getGlobalTimestamp();
+	float mysample = CoreServices::getGlobalSampleRate();
+
+	if (basler->acquisitionActive != false && basler->attached) {
+
+		// This smart pointer will receive the grab result data.
+		CGrabResultPtr ptrGrabResult;
+
+		int nBuffersInQueue = 0;
+
+		if (basler->saveData) {
+			while (basler->camera.RetrieveResult(0, ptrGrabResult, TimeoutHandling_Return))
+			{
+				nBuffersInQueue++;
+				basler->mydata = (char *)ptrGrabResult->GetBuffer();
+				fwrite(basler->mydata, sizeof(char)* 640 * 480, 1, basler->ffmpeg);
+			}
+		}
+		else {
+			while (basler->camera.RetrieveResult(0, ptrGrabResult, TimeoutHandling_Return))
+			{
+				nBuffersInQueue++;
+				basler->mydata = (char *)ptrGrabResult->GetBuffer();
+			}
+		}
+	}
+
+	//std::cout << mytime / mysample << std::endl;
 	repaint();
 }
 
@@ -117,55 +145,18 @@ void BaslerCameraCanvas::setParameter(int a, int b, int c, float d)
 
 void BaslerCameraCanvas::paint(Graphics& g)
 {
+	if (basler->acquisitionActive != false && basler->attached) {  
 
-	if (basler->acquisitionActive != false && basler->attached) {
-
-		int64 mytime = CoreServices::getGlobalTimestamp();
-		float mysample = CoreServices::getGlobalSampleRate();    
-
-        // This smart pointer will receive the grab result data.
-        CGrabResultPtr ptrGrabResult;
-	Image myImage(Image::ARGB, 640, 480, true);
-	Image::BitmapData temp(myImage,Image::BitmapData::ReadWriteMode::readWrite);
-	
-	int nBuffersInQueue = 0;
-	char *mydata;
-
-	if (basler->saveData) {
-		//std::ofstream outbin(const_cast<char*>(basler->saveFilePath.c_str()), std::ios::out | std::ios::binary | std::ios::app);	
-		
-        	while( basler->camera.RetrieveResult( 0, ptrGrabResult, TimeoutHandling_Return))
-        	{
-            	nBuffersInQueue++;
-	    		mydata = (char *) ptrGrabResult->GetBuffer();
-				fwrite(mydata, sizeof(char)*640*480, 1, basler->ffmpeg);
-				//basler->aviWriter.Add(ptrGrabResult);
-				//outbin.write(mydata,640*480);
-        	}
-			
-		//outbin.close();
-	} else {
-
-		while( basler->camera.RetrieveResult( 0, ptrGrabResult, TimeoutHandling_Return))
-        	{
-            	nBuffersInQueue++;
-				mydata = (char *) ptrGrabResult->GetBuffer();
-        	}
-		
-	}
-        //std::cout << "Retrieved " << nBuffersInQueue << " grab results from output queue." << std::endl;
-
-	for (int y = 0; y< 480; y++)
-	{
-		for (int x = 0; x<640; x++)
-		{
-			temp.setPixelColour(x,y,Colour::fromRGBA(255,255,255,mydata[640*y + x]));
+		Image myImage(Image::ARGB, 640, 480, true);
+		Image::BitmapData temp(myImage,Image::BitmapData::ReadWriteMode::readWrite);
+		for (int y = 0; y< 480; y++)
+			{
+			for (int x = 0; x<640; x++)
+			{
+				temp.setPixelColour(x,y,Colour::fromRGBA(255,255,255,basler->mydata[640*y + x]));
+			}
 		}
-	}
-	
-	g.drawImageAt(myImage,0,0);
-
-	//std::cout << mytime / mysample << std::endl;
+		g.drawImageAt(myImage,0,0);
 	}
 }
 
@@ -313,7 +304,11 @@ void BaslerCameraEditor::buttonEvent(Button* button)
 
 		bool myState = button->getToggleState();
 		if (myState) {
-			const char* cmd = "C:/Users/Paul/Downloads/ffmpeg-3.4.1-win64-static/ffmpeg-3.4.1-win64-static/bin/ffmpeg -f rawvideo -pix_fmt gray -s 640x480 -r 500 -i - -y -pix_fmt nv12 -vcodec h264_qsv -preset veryfast -look_ahead 0 output.mp4";
+			//Save with Intel QuickSync
+			//const char* cmd = "D:/Bonsai/ffmpeg -f rawvideo -pix_fmt gray -s 640x480 -r 500 -i - -y -pix_fmt nv12 -vcodec h264_qsv -preset veryfast -look_ahead 0 output.mp4";
+			
+			//Save with Nvidia NVENC
+			const char* cmd = "D:/Bonsai/ffmpeg -y -f rawvideo -pix_fmt gray -s 640x480 -r 500 -i - -y -pix_fmt nv12 -c:v h264_nvenc -preset fast output.mp4";
 			basler->ffmpeg = _popen(cmd, "wb");
 			if (basler->ffmpeg == NULL) {
 				printf("Error opening file unexist.ent: %s\n", strerror(errno));

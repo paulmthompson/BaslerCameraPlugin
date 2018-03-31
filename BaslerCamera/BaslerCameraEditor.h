@@ -57,6 +57,7 @@ public:
 	std::string saveFilePath;
 	bool saveData;
 	FILE* ffmpeg;
+	char* mydata;
 };
 
 class BaslerCameraViewer : public Component,
