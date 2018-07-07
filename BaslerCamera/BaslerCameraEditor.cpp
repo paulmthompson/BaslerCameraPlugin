@@ -1,6 +1,7 @@
 
 #include "BaslerCameraEditor.h"
 #include <stdio.h>
+#include <stdlib.h>  
 #include <fstream>
 #include <iostream>
 #include <errno.h>
@@ -27,7 +28,8 @@ MyCamera::MyCamera()
 	frameRate = 500.0;
 	gain = 13.0;
 	exposureTime = 1000;
-	saveFilePath = "D:\Data\Video\myfile.bin";
+	saveFilePath = "./";
+	saveFileName = "output.mp4";
 }
 
 MyCamera::~MyCamera()
@@ -85,34 +87,6 @@ void BaslerCameraCanvas::buttonClicked(Button* btn)
 
 void BaslerCameraCanvas::refresh()
 {
-	int64 mytime = CoreServices::getGlobalTimestamp();
-	float mysample = CoreServices::getGlobalSampleRate();
-
-	if (basler->acquisitionActive != false && basler->attached) {
-
-		// This smart pointer will receive the grab result data.
-		CGrabResultPtr ptrGrabResult;
-
-		int nBuffersInQueue = 0;
-
-		if (basler->saveData) {
-			while (basler->camera.RetrieveResult(0, ptrGrabResult, TimeoutHandling_Return))
-			{
-				nBuffersInQueue++;
-				basler->mydata = (char *)ptrGrabResult->GetBuffer();
-				fwrite(basler->mydata, sizeof(char)* 640 * 480, 1, basler->ffmpeg);
-			}
-		}
-		else {
-			while (basler->camera.RetrieveResult(0, ptrGrabResult, TimeoutHandling_Return))
-			{
-				nBuffersInQueue++;
-				basler->mydata = (char *)ptrGrabResult->GetBuffer();
-			}
-		}
-	}
-
-	//std::cout << mytime / mysample << std::endl;
 	repaint();
 }
 
@@ -145,18 +119,55 @@ void BaslerCameraCanvas::setParameter(int a, int b, int c, float d)
 
 void BaslerCameraCanvas::paint(Graphics& g)
 {
-	if (basler->acquisitionActive != false && basler->attached) {  
 
-		Image myImage(Image::ARGB, 640, 480, true);
-		Image::BitmapData temp(myImage,Image::BitmapData::ReadWriteMode::readWrite);
-		for (int y = 0; y< 480; y++)
-			{
-			for (int x = 0; x<640; x++)
-			{
-				temp.setPixelColour(x,y,Colour::fromRGBA(255,255,255,basler->mydata[640*y + x]));
-			}
+	if (basler->acquisitionActive != false && basler->attached) {
+
+		int64 mytime = CoreServices::getGlobalTimestamp();
+		float mysample = CoreServices::getGlobalSampleRate();    
+
+        // This smart pointer will receive the grab result data.
+        CGrabResultPtr ptrGrabResult;
+	Image myImage(Image::ARGB, 640, 480, true);
+	Image::BitmapData temp(myImage,Image::BitmapData::ReadWriteMode::readWrite);
+	
+	int nBuffersInQueue = 0;
+	char *mydata;
+
+	if (basler->saveData) {
+		//std::ofstream outbin(const_cast<char*>(basler->saveFilePath.c_str()), std::ios::out | std::ios::binary | std::ios::app);	
+		
+        	while( basler->camera.RetrieveResult( 0, ptrGrabResult, TimeoutHandling_Return))
+        	{
+            	nBuffersInQueue++;
+	    		mydata = (char *) ptrGrabResult->GetBuffer();
+				fwrite(mydata, sizeof(char)*640*480, 1, basler->ffmpeg);
+				//basler->aviWriter.Add(ptrGrabResult);
+				//outbin.write(mydata,640*480);
+        	}
+			
+		//outbin.close();
+	} else {
+
+		while( basler->camera.RetrieveResult( 0, ptrGrabResult, TimeoutHandling_Return))
+        	{
+            	nBuffersInQueue++;
+				mydata = (char *) ptrGrabResult->GetBuffer();
+        	}
+		
+	}
+        //std::cout << "Retrieved " << nBuffersInQueue << " grab results from output queue." << std::endl;
+
+	for (int y = 0; y< 480; y++)
+	{
+		for (int x = 0; x<640; x++)
+		{
+			temp.setPixelColour(x,y,Colour::fromRGBA(255,255,255,mydata[640*y + x]));
 		}
-		g.drawImageAt(myImage,0,0);
+	}
+	
+	g.drawImageAt(myImage,0,0);
+
+	//std::cout << mytime / mysample << std::endl;
 	}
 }
 
@@ -167,7 +178,7 @@ BaslerCameraEditor::BaslerCameraEditor(GenericProcessor* parentNode,bool useDefa
 	std::ios_base::sync_with_stdio(false);
 	PylonInitialize();
 
-	desiredWidth = 400;
+	desiredWidth = 500;
 	canvas = nullptr;
 	tabText = "Camera";
 
@@ -219,6 +230,28 @@ BaslerCameraEditor::BaslerCameraEditor(GenericProcessor* parentNode,bool useDefa
 	exposureTimeSlider->addListener(this);
 	addAndMakeVisible(exposureTimeSlider);
 
+	labelSaveFolder = new Label("save folder", "./");
+	labelSaveFolder->setBounds(400, 50, 100, 20);
+	labelSaveFolder->setFont(Font("Default", 15, Font::plain));
+	labelSaveFolder->setEditable(true);
+	labelSaveFolder->addListener(this);
+	addAndMakeVisible(labelSaveFolder);
+
+	labelFolder = new Label("save folder label", "Folder Path");
+	labelFolder->setBounds(350, 50, 50, 20);
+	addAndMakeVisible(labelFolder);
+
+	labelSaveFile = new Label("save file", "output.mp4");
+	labelSaveFile->setBounds(400, 75, 100, 20);
+	labelSaveFile->setFont(Font("Default", 15, Font::plain));
+	labelSaveFile->setEditable(true);
+	labelSaveFile->addListener(this);
+	addAndMakeVisible(labelSaveFile);
+
+	labelFile = new Label("save file label", "File Name");
+	labelFile->setBounds(350, 75, 50, 20);
+	addAndMakeVisible(labelFile);
+
 	basler = new MyCamera();
 }
 
@@ -257,6 +290,22 @@ void BaslerCameraEditor::sliderEvent(Slider* slider)
 		std::cout << "Resulting Frame Rate " << basler->camera.ResultingFrameRate.GetValue() << std::endl;
 	}
 }
+
+void BaslerCameraEditor::labelTextChanged(juce::Label *label)
+{
+	if (label == labelSaveFolder)
+	{
+		Value val = label->getTextValue();
+
+		basler->saveFilePath = val.toString().toStdString();
+	}
+	else if (label == labelSaveFile) {
+		Value val = label->getTextValue();
+
+		basler->saveFileName = val.toString().toStdString();
+	}
+}
+
 
 void BaslerCameraEditor::buttonEvent(Button* button)
 {
@@ -304,12 +353,16 @@ void BaslerCameraEditor::buttonEvent(Button* button)
 
 		bool myState = button->getToggleState();
 		if (myState) {
-			//Save with Intel QuickSync
-			//const char* cmd = "D:/Bonsai/ffmpeg -f rawvideo -pix_fmt gray -s 640x480 -r 500 -i - -y -pix_fmt nv12 -vcodec h264_qsv -preset veryfast -look_ahead 0 output.mp4";
-			
-			//Save with Nvidia NVENC
-			const char* cmd = "D:/Bonsai/ffmpeg -y -f rawvideo -pix_fmt gray -s 640x480 -r 500 -i - -y -pix_fmt nv12 -c:v h264_nvenc -preset fast output.mp4";
-			basler->ffmpeg = _popen(cmd, "wb");
+			char full_cmd[1000];
+			//Should have a configuration file or something to state location of ffmpeg along with
+			//other default parameters, and probably the location of the basler camera features
+			char ffmpeg_filepath[] = "C:/Users/Paul/Downloads/ffmpeg-3.4.1-win64-static/ffmpeg-3.4.1-win64-static/bin/ffmpeg";
+			char ffmpeg_cmd[] = "-hwaccel qsv -f rawvideo -pix_fmt gray -s 640x480 -i - -y -pix_fmt nv12 -vcodec h264_qsv -preset veryfast -look_ahead 0";
+			int len;
+			len = _snprintf(full_cmd, sizeof(full_cmd), "%s %s %s %s", ffmpeg_filepath, ffmpeg_cmd, basler->saveFilePath.c_str(), basler->saveFileName.c_str());
+
+			//const char* cmd = "C:/Users/Paul/Downloads/ffmpeg-3.4.1-win64-static/ffmpeg-3.4.1-win64-static/bin/ffmpeg -hwaccel qsv -f rawvideo -pix_fmt gray -s 640x480 -i - -y -pix_fmt nv12 -vcodec h264_qsv -preset veryfast -look_ahead 0 output.mp4";
+			basler->ffmpeg = _popen(full_cmd, "wb");
 			if (basler->ffmpeg == NULL) {
 				printf("Error opening file unexist.ent: %s\n", strerror(errno));
 			}

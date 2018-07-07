@@ -55,9 +55,9 @@ public:
 	float gain;
 	int exposureTime;
 	std::string saveFilePath;
+	std::string saveFileName;
 	bool saveData;
 	FILE* ffmpeg;
-	char* mydata;
 };
 
 class BaslerCameraViewer : public Component,
@@ -107,7 +107,7 @@ private:
 
 
 
-class BaslerCameraEditor : public VisualizerEditor, public ComboBox::Listener
+class BaslerCameraEditor : public VisualizerEditor, public ComboBox::Listener, Label::Listener
 
 
 
@@ -117,6 +117,7 @@ public:
     ~BaslerCameraEditor();
 
 	void comboBoxChanged(ComboBox* comboBoxThatHasChanged);
+	void labelTextChanged(juce::Label *);
 	Visualizer* createNewCanvas(void);
 	void buttonEvent(Button* button);
 	void sliderEvent(Slider* slider);
@@ -133,6 +134,11 @@ private:
 	ScopedPointer<Label> exposureTimeLabel;
 	ScopedPointer<Slider> gainSlider;
 	ScopedPointer<Label> gainLabel;
+	ScopedPointer<Label> labelSaveFolder;
+	ScopedPointer<Label> labelSaveFile;
+	ScopedPointer<Label> labelFolder;
+	ScopedPointer<Label> labelFile;
+
 
 	ScopedPointer<ToggleButton> saveButton;
 
