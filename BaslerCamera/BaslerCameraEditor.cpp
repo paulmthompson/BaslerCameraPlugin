@@ -9,7 +9,6 @@
 
 #include <pylon/PylonIncludes.h>
 #include <pylon/usb/BaslerUsbInstantCamera.h>
-#include <pylon/AviCompressionOptions.h>
 
 //#ifdef PYLON_WIN_BUILD
 //#    include <pylon/PylonGUI.h>
@@ -359,16 +358,25 @@ void BaslerCameraEditor::buttonEvent(Button* button)
 			char ffmpeg_filepath[] = "C:/Users/Paul/Downloads/ffmpeg-3.4.1-win64-static/ffmpeg-3.4.1-win64-static/bin/ffmpeg";
 			char ffmpeg_cmd[] = "-hwaccel qsv -f rawvideo -pix_fmt gray -s 640x480 -i - -y -pix_fmt nv12 -vcodec h264_qsv -preset veryfast -look_ahead 0";
 			int len;
-			len = _snprintf(full_cmd, sizeof(full_cmd), "%s %s %s %s", ffmpeg_filepath, ffmpeg_cmd, basler->saveFilePath.c_str(), basler->saveFileName.c_str());
+
+			len = std::snprintf(full_cmd, sizeof(full_cmd), "%s %s %s %s", ffmpeg_filepath, ffmpeg_cmd, basler->saveFilePath.c_str(), basler->saveFileName.c_str());
 
 			//const char* cmd = "C:/Users/Paul/Downloads/ffmpeg-3.4.1-win64-static/ffmpeg-3.4.1-win64-static/bin/ffmpeg -hwaccel qsv -f rawvideo -pix_fmt gray -s 640x480 -i - -y -pix_fmt nv12 -vcodec h264_qsv -preset veryfast -look_ahead 0 output.mp4";
-			basler->ffmpeg = _popen(full_cmd, "wb");
+			#ifdef _WIN32			
+				basler->ffmpeg = _popen(full_cmd, "wb");
+			#else
+				basler->ffmpeg = popen(full_cmd, "w");
+			#endif
 			if (basler->ffmpeg == NULL) {
 				printf("Error opening file unexist.ent: %s\n", strerror(errno));
 			}
 		}
 		else {
-			_pclose(basler->ffmpeg);
+			#ifdef _WIN32
+				_pclose(basler->ffmpeg);
+			#else
+				pclose(basler->ffmpeg);
+			#endif
 		}
 		basler->saveData = myState;
 	}
