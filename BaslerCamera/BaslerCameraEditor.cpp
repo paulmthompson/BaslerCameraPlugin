@@ -26,6 +26,7 @@ MyCamera::MyCamera()
 	exposureTime = 1000;
 	saveFilePath = "./";
 	saveFileName = "output.mp4";
+	framesGrabbed = false;
 }
 
 MyCamera::~MyCamera()
@@ -83,6 +84,41 @@ void BaslerCameraCanvas::buttonClicked(Button* btn)
 
 void BaslerCameraCanvas::refresh()
 {
+	if (basler->acquisitionActive != false && basler->attached) {
+
+		int64 mytime = CoreServices::getGlobalTimestamp();
+		float mysample = CoreServices::getGlobalSampleRate();    
+
+        	// This smart pointer will receive the grab result data.
+        	CGrabResultPtr ptrGrabResult;
+	
+		int nBuffersInQueue = 0;
+		basler ->framesGrabbed = false;
+
+		if (basler->saveData) {
+		
+        		while( basler->camera.RetrieveResult( 0, ptrGrabResult, TimeoutHandling_Return))
+        		{
+            			nBuffersInQueue++;
+	    			basler->mydata = (char *) ptrGrabResult->GetBuffer();
+				fwrite(basler->mydata, sizeof(char)*640*480, 1, basler->ffmpeg);
+        		}
+			
+		} else {
+
+			while( basler->camera.RetrieveResult( 0, ptrGrabResult, TimeoutHandling_Return))
+        		{
+            			nBuffersInQueue++;
+				basler->mydata = (char *) ptrGrabResult->GetBuffer();
+        		}
+		
+		}
+        //std::cout << "Retrieved " << nBuffersInQueue << " grab results from output queue." << std::endl;
+		if (nBuffersInQueue) {
+			basler->framesGrabbed = true;
+		}
+	}
+
 	repaint();
 }
 
@@ -115,51 +151,19 @@ void BaslerCameraCanvas::setParameter(int a, int b, int c, float d)
 
 void BaslerCameraCanvas::paint(Graphics& g)
 {
+	if (basler->framesGrabbed) {
+		Image myImage(Image::ARGB, 640, 480, true);
+		Image::BitmapData temp(myImage,Image::BitmapData::ReadWriteMode::readWrite);
 
-	if (basler->acquisitionActive != false && basler->attached) {
-
-		int64 mytime = CoreServices::getGlobalTimestamp();
-		float mysample = CoreServices::getGlobalSampleRate();    
-
-        // This smart pointer will receive the grab result data.
-        CGrabResultPtr ptrGrabResult;
-	Image myImage(Image::ARGB, 640, 480, true);
-	Image::BitmapData temp(myImage,Image::BitmapData::ReadWriteMode::readWrite);
-	
-	int nBuffersInQueue = 0;
-	char *mydata;
-
-	if (basler->saveData) {
-		
-        	while( basler->camera.RetrieveResult( 0, ptrGrabResult, TimeoutHandling_Return))
-        	{
-            	nBuffersInQueue++;
-	    		mydata = (char *) ptrGrabResult->GetBuffer();
-				fwrite(mydata, sizeof(char)*640*480, 1, basler->ffmpeg);
-        	}
-			
-	} else {
-
-		while( basler->camera.RetrieveResult( 0, ptrGrabResult, TimeoutHandling_Return))
-        	{
-            	nBuffersInQueue++;
-				mydata = (char *) ptrGrabResult->GetBuffer();
-        	}
-		
-	}
-        //std::cout << "Retrieved " << nBuffersInQueue << " grab results from output queue." << std::endl;
-
-	for (int y = 0; y< 480; y++)
-	{
-		for (int x = 0; x<640; x++)
+		for (int y = 0; y< 480; y++)
 		{
-			temp.setPixelColour(x,y,Colour::fromRGBA(255,255,255,mydata[640*y + x]));
+			for (int x = 0; x<640; x++)
+			{
+				temp.setPixelColour(x,y,Colour::fromRGBA(255,255,255,basler->mydata[640*y + x]));
+			}
 		}
-	}
 	
-	g.drawImageAt(myImage,0,0);
-
-	//std::cout << mytime / mysample << std::endl;
+		g.drawImageAt(myImage,0,0);
 	}
 }
 

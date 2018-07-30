@@ -57,6 +57,8 @@ public:
 	std::string saveFileName;
 	bool saveData;
 	FILE* ffmpeg;
+	char* mydata;
+	bool framesGrabbed;
 };
 
 class BaslerCameraViewer : public Component,
