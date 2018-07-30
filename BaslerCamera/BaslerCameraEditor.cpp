@@ -10,9 +10,6 @@
 #include <pylon/PylonIncludes.h>
 #include <pylon/usb/BaslerUsbInstantCamera.h>
 
-//#ifdef PYLON_WIN_BUILD
-//#    include <pylon/PylonGUI.h>
-//#endif
 
 // Namespace for using pylon objects.
 using namespace Basler_UsbCameraParams;
@@ -133,18 +130,14 @@ void BaslerCameraCanvas::paint(Graphics& g)
 	char *mydata;
 
 	if (basler->saveData) {
-		//std::ofstream outbin(const_cast<char*>(basler->saveFilePath.c_str()), std::ios::out | std::ios::binary | std::ios::app);	
 		
         	while( basler->camera.RetrieveResult( 0, ptrGrabResult, TimeoutHandling_Return))
         	{
             	nBuffersInQueue++;
 	    		mydata = (char *) ptrGrabResult->GetBuffer();
 				fwrite(mydata, sizeof(char)*640*480, 1, basler->ffmpeg);
-				//basler->aviWriter.Add(ptrGrabResult);
-				//outbin.write(mydata,640*480);
         	}
 			
-		//outbin.close();
 	} else {
 
 		while( basler->camera.RetrieveResult( 0, ptrGrabResult, TimeoutHandling_Return))
@@ -320,13 +313,16 @@ void BaslerCameraEditor::buttonEvent(Button* button)
 			basler->camera.MaxNumBuffer = 35;
 			basler->camera.Open(); // Need to access parameters
 
+			//Load values from configuration file
+			CFeaturePersistence::Load("/home/wanglab/Desktop/Config/acA640-750um_500_triggered.pfs", &basler->camera.GetNodeMap(), true);
+
 			std::cout << "Frame Rate " << basler->camera.AcquisitionFrameRate.GetValue() << std::endl;
 			std::cout << "Exposure Time: " << basler->camera.ExposureTime.GetValue() << std::endl;
+				
+			//basler->camera.AcquisitionFrameRateEnable.SetValue(true);
 	
-			basler->camera.AcquisitionFrameRateEnable.SetValue(true);
-	
-			basler->camera.AcquisitionFrameRate.SetValue(500.0);
-			basler->camera.ExposureTime.SetValue(1000.0);
+			//basler->camera.AcquisitionFrameRate.SetValue(500.0);
+			//basler->camera.ExposureTime.SetValue(1000.0);
 
 			//Resulting Frame Rate gives the real frame rate accounting for all of the camera
 			//configuration parameters such as the desired sampling rate and exposure time
@@ -355,13 +351,12 @@ void BaslerCameraEditor::buttonEvent(Button* button)
 			char full_cmd[1000];
 			//Should have a configuration file or something to state location of ffmpeg along with
 			//other default parameters, and probably the location of the basler camera features
-			char ffmpeg_filepath[] = "C:/Users/Paul/Downloads/ffmpeg-3.4.1-win64-static/ffmpeg-3.4.1-win64-static/bin/ffmpeg";
-			char ffmpeg_cmd[] = "-hwaccel qsv -f rawvideo -pix_fmt gray -s 640x480 -i - -y -pix_fmt nv12 -vcodec h264_qsv -preset veryfast -look_ahead 0";
+			char ffmpeg_filepath[] = "ffmpeg";
+			char ffmpeg_cmd[] = "-f rawvideo -pix_fmt gray -s 640x480 -i - -y -pix_fmt nv12 -vcodec h264_nvenc";
 			int len;
 
-			len = std::snprintf(full_cmd, sizeof(full_cmd), "%s %s %s %s", ffmpeg_filepath, ffmpeg_cmd, basler->saveFilePath.c_str(), basler->saveFileName.c_str());
+			len = std::snprintf(full_cmd, sizeof(full_cmd), "%s %s %s%s", ffmpeg_filepath, ffmpeg_cmd, basler->saveFilePath.c_str(), basler->saveFileName.c_str());
 
-			//const char* cmd = "C:/Users/Paul/Downloads/ffmpeg-3.4.1-win64-static/ffmpeg-3.4.1-win64-static/bin/ffmpeg -hwaccel qsv -f rawvideo -pix_fmt gray -s 640x480 -i - -y -pix_fmt nv12 -vcodec h264_qsv -preset veryfast -look_ahead 0 output.mp4";
 			#ifdef _WIN32			
 				basler->ffmpeg = _popen(full_cmd, "wb");
 			#else
