@@ -151,6 +151,10 @@ void BaslerCameraCanvas::setParameter(int a, int b, int c, float d)
 
 void BaslerCameraCanvas::paint(Graphics& g)
 {
+
+	g.setColour(Colour(0,0,0));
+	g.fillRect(0,0,getWidth(),getHeight());	
+
 	if (basler->framesGrabbed) {
 		Image myImage(Image::ARGB, 640, 480, true);
 		Image::BitmapData temp(myImage,Image::BitmapData::ReadWriteMode::readWrite);
