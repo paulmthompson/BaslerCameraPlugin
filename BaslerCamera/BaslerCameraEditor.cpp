@@ -14,6 +14,7 @@
 // Namespace for using pylon objects.
 using namespace Basler_UsbCameraParams;
 using namespace Pylon;
+using namespace std;
 
 MyCamera::MyCamera()
 {
@@ -27,6 +28,7 @@ MyCamera::MyCamera()
 	saveFilePath = "./";
 	saveFileName = "output.mp4";
 	framesGrabbed = false;
+	totalFramesSaved = 0;
 }
 
 MyCamera::~MyCamera()
@@ -99,11 +101,23 @@ void BaslerCameraCanvas::refresh()
 		
         		while( basler->camera.RetrieveResult( 0, ptrGrabResult, TimeoutHandling_Return))
         		{
+
+				//For each frame we grab we will send it to
+				//ffmpeg for saving
+				//And write the total frames saved at the current time
+				//stamp as a rough backup of the camera alignment
+				//in case something goes wrong with the TTls	
             			nBuffersInQueue++;
 	    			basler->mydata = (char *) ptrGrabResult->GetBuffer();
 				fwrite(basler->mydata, sizeof(char)*640*480, 1, basler->ffmpeg);
+
+				basler->totalFramesSaved+=1;
         		}
-			
+
+			int64 mytime = CoreServices::getGlobalTimestamp();
+			basler->saveTimeStamp.write(reinterpret_cast<const char *>(&mytime), sizeof(mytime));
+			basler->saveTimeStamp.write(reinterpret_cast<const char *>(&basler->totalFramesSaved), sizeof(basler->totalFramesSaved));
+			basler->saveTimeStamp.flush();
 		} else {
 
 			while( basler->camera.RetrieveResult( 0, ptrGrabResult, TimeoutHandling_Return))
@@ -373,6 +387,10 @@ void BaslerCameraEditor::buttonEvent(Button* button)
 			if (basler->ffmpeg == NULL) {
 				printf("Error opening file unexist.ent: %s\n", strerror(errno));
 			}
+
+			len = std::snprintf(full_cmd, sizeof(full_cmd), "%s%s",  basler->saveFilePath.c_str(), "timestampbackup.bin");
+			//Create fstream for backup timestamp saving
+			basler->saveTimeStamp = std::fstream(full_cmd,std::ios::out | std::ios::binary);
 		}
 		else {
 			#ifdef _WIN32
@@ -380,6 +398,9 @@ void BaslerCameraEditor::buttonEvent(Button* button)
 			#else
 				pclose(basler->ffmpeg);
 			#endif
+
+			//close backup timestamp stream
+			basler->saveTimeStamp.close();
 		}
 		basler->saveData = myState;
 	}

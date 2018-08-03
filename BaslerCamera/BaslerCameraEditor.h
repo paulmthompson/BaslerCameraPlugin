@@ -27,6 +27,7 @@
 #include <EditorHeaders.h>
 #include "BaslerCamera.h"
 #include <stdio.h>
+#include <fstream>
 #include "../../Processors/Editors/GenericEditor.h"
 #include "../../Processors/Editors/VisualizerEditor.h"
 
@@ -40,6 +41,7 @@ typedef Pylon::CBaslerUsbInstantCamera Camera_t;
 class BaslerCameraCanvas;
 
 using namespace Pylon;
+using namespace std;
 
 class MyCamera
 {
@@ -59,6 +61,8 @@ public:
 	FILE* ffmpeg;
 	char* mydata;
 	bool framesGrabbed;
+	int totalFramesSaved;
+	std::fstream saveTimeStamp;
 };
 
 class BaslerCameraViewer : public Component,
