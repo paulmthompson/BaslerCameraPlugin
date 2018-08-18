@@ -52,11 +52,10 @@ public:
 	Camera_t camera;
 	bool attached;
 	bool acquisitionActive;
-	float frameRate;
-	float gain;
-	int exposureTime;
+	float frameRate; //Estimate of frame rate currently being used
 	std::string saveFilePath;
 	std::string saveFileName;
+	std::string configFileName;
 	bool saveData;
 	FILE* ffmpeg;
 	char* mydata;
@@ -107,7 +106,7 @@ public:
 
 private:
 	MyCamera* basler;
-	
+
 };
 
 
@@ -125,20 +124,14 @@ public:
 	void labelTextChanged(juce::Label *);
 	Visualizer* createNewCanvas(void);
 	void buttonEvent(Button* button);
-	void sliderEvent(Slider* slider);
-	
+
 private:
 
 	ScopedPointer<Label> sourceLabel;
 	ScopedPointer<ComboBox> sourceCombo;
 	ScopedPointer<UtilityButton> connectButton;
 	ScopedPointer<UtilityButton> sourceButton;
-	ScopedPointer<Slider> frameRateSlider;
 	ScopedPointer<Label> frameRateLabel;
-	ScopedPointer<Slider> exposureTimeSlider;
-	ScopedPointer<Label> exposureTimeLabel;
-	ScopedPointer<Slider> gainSlider;
-	ScopedPointer<Label> gainLabel;
 	ScopedPointer<Label> labelSaveFolder;
 	ScopedPointer<Label> labelSaveFile;
 	ScopedPointer<Label> labelFolder;
@@ -149,11 +142,10 @@ private:
 
 	BaslerCameraCanvas* canvas;
 	MyCamera* basler;
-	
+
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BaslerCameraEditor);
 
 };
 
 #endif  // __BASLERCAMERAEDITOR_H__
-		
