@@ -340,11 +340,13 @@ void BaslerCameraEditor::buttonEvent(Button* button)
 				printf("Error opening file unexist.ent: %s\n", strerror(errno));
 			}
 
-			len = std::snprintf(full_cmd, sizeof(full_cmd), "%s%s",  basler->saveFilePath.c_str(), "timestampbackup.bin");
+			len = std::snprintf(full_cmd, sizeof(full_cmd), "%s%s%s",  basler->saveFilePath.c_str(), basler->saveFileName.c_str(),"_tsbackup.bin");
+
 			//Create fstream for backup timestamp saving
 			basler->saveTimeStamp = std::fstream(full_cmd,std::ios::out | std::ios::binary);
 		}
 		else {
+			//Uncheck the save button, close ffmpeg and time stamp backup stream
 			#ifdef _WIN32
 				_pclose(basler->ffmpeg);
 			#else
@@ -353,6 +355,9 @@ void BaslerCameraEditor::buttonEvent(Button* button)
 
 			//close backup timestamp stream
 			basler->saveTimeStamp.close();
+
+			//reset the number of total frames saved
+			basler->totalFramesSaved = 0;
 		}
 		basler->saveData = myState;
 	}
